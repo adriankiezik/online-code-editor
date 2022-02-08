@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "author": "Adrian Kiezik",
+  "repository": "https://github.com/adriankiezik/web-editor",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.2",
