@@ -6,9 +6,9 @@ import { fetchPlugin } from './plugins/fetch-plugin';
 
 const App: React.FC = () => {
   const ref = useRef<any>();
+  const iframe = useRef<any>();
 
   const [textAreaInput, setTextAreaInput] = useState('');
-  const [code, setCode] = useState('');
 
   const startService = async () => {
     ref.current = await esbuild.startService({
@@ -26,6 +26,8 @@ const App: React.FC = () => {
       return;
     }
 
+    iframe.current.srcdoc = html;
+
     const result = await ref.current.build({
       entryPoints: ['index.js'],
       bundle: true,
@@ -37,8 +39,28 @@ const App: React.FC = () => {
       },
     });
 
-    setCode(result.outputFiles[0].text);
+    iframe.current.contentWindow.postMessage(result.outputFiles[0].text, '*');
   };
+
+  const html = `
+    <html>
+      <head></head>
+      <body>
+        <div id="root"></div>
+        <script>
+          window.addEventListener('message', (event) => {
+            try {
+              eval(event.data);
+            } catch (err) {
+              document.querySelector('#root')
+              .innerHTML = '<div><h4>Runtime error:</h4>' + err + '</div>';
+              console.error(err);
+            }
+          }, false)
+        </script>
+      </body>
+    </html>
+  `;
 
   return (
     <div>
@@ -49,7 +71,12 @@ const App: React.FC = () => {
       <div>
         <button onClick={onClick}>Submit</button>
       </div>
-      <pre>{code}</pre>
+      <iframe
+        title="code"
+        ref={iframe}
+        srcDoc={html}
+        sandbox="allow-scripts"
+      ></iframe>
     </div>
   );
 };
